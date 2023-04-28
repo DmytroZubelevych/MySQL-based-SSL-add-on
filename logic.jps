@@ -145,10 +145,27 @@ actions:
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "UPDATE global_variables SET variable_value='false' WHERE variable_name='mysql-have_ssl';"
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "LOAD MYSQL VARIABLES TO RUNTIME;"
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "SAVE MYSQL VARIABLES TO DISK;"
-            rm -f ${globals.proxysqlDir}/proxysql-ca.pem;
-            rm -f ${globals.proxysqlDir}/proxysql-key.pem;
-            rm -f ${globals.proxysqlDir}/proxysql-cert.pem;
+            for i in proxysql-ca.pem proxysql-key.pem proxysql-cert.pem
+            do
+                rm -f ${globals.proxysqlDir}/${i};
+            done
+            
         fi
+        for i in client.crt client.key root.crt
+        do
+            rm -f /var/lib/jelastic/keys/SSL-TLS/client/${i}
+        done
+        for i in root.crt root.srl server.crt server.key
+        do
+            rm -f /var/lib/jelastic/keys/SSL-TLS/server/${i}
+        done
+        sed -ci -e '/\/var\/lib\/jelastic\/keys\/SSL-TLS/d' /etc/jelastic/redeploy.conf
+        for i in client server
+        do
+            if [ -z "$(ls -A /var/lib/jelastic/keys/SSL-TLS/${i})" ]; then
+                rm -rf /var/lib/jelastic/keys/SSL-TLS/${i}
+            fi
+        done
       user: root
 
   addCertsForNewNodes:
