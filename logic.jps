@@ -69,7 +69,7 @@ buttons:
 
 actions:
   reGenerateCerts:
-    - cmd[${targetNodes.nodeGroup}]: rm -rf /var/lib/jelastic/keys/SSL-TLS/*;
+    - cmd[${targetNodes.nodeGroup}]: rm -rf ${globals.certFolder}/*;
     - generateCerts:
         affectedNodes: ${targetNodes.nodeGroup}
     - cmd[${targetNodes.nodeGroup}]: jem service restart
@@ -81,7 +81,7 @@ actions:
         wget -O /usr/local/sbin/selfcertgen ${baseUrl}/scripts/selfcertgen?_r=${fn.random};
         chmod +x /usr/local/sbin/selfcertgen
         selfcertgen;
-        chown -R 700:700 /var/lib/jelastic/keys/SSL-TLS /usr/local/sbin/selfcertgen; chmod 600 /var/lib/jelastic/keys/SSL-TLS/*
+        chown -R 700:700 ${globals.certFolder} /usr/local/sbin/selfcertgen; chmod 600 ${globals.certFolder}/*
       user: root
     - cmd[${this.affectedNodes}]: |-
         rm -rf ${globals.certFolder}/client; mkdir -p ${globals.certFolder}/client;
@@ -90,19 +90,19 @@ actions:
         rm -f /var/lib/jelastic/keys/SSL-TLS/client.csr
         for i in client.crt client.key
         do
-            [ -f /var/lib/jelastic/keys/SSL-TLS/${i} ] && mv -f /var/lib/jelastic/keys/SSL-TLS/${i} /var/lib/jelastic/keys/SSL-TLS/client/${i}
+            [ -f ${globals.certFolder}/${i} ] && mv -f ${globals.certFolder}/${i} ${globals.certFolder}/client/${i}
         done
         for i in root.crt root.srl server.crt server.key
         do
-            [ -f /var/lib/jelastic/keys/SSL-TLS/${i} ] && mv -f /var/lib/jelastic/keys/SSL-TLS/${i} /var/lib/jelastic/keys/SSL-TLS/server/${i}
+            [ -f ${globals.certFolder}/${i} ] && mv -f ${globals.certFolder}/${i} ${globals.certFolder}/server/${i}
         done
-        ln -sfT /var/lib/jelastic/keys/SSL-TLS/server/root.crt /var/lib/jelastic/keys/SSL-TLS/client/root.crt
+        ln -sfT ${globals.certFolder}/server/root.crt ${globals.certFolder}/client/root.crt
       user: root
 
   enableSSL:
     - cmd[${this.affectedNodes}]: |-
         [ -e '/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' ] && DB_CONFIG_FILE='/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' || DB_CONFIG_FILE='/etc/my.cnf'
-        echo "/var/lib/jelastic/keys/SSL-TLS" >> /etc/jelastic/redeploy.conf
+        echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
             grep -q '^[[:space:]]*ssl-cipher' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl-cipher=ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-SHA' ${DB_CONFIG_FILE}
