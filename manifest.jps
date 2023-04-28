@@ -1,0 +1,38 @@
+type: install
+jpsVersion: 6.1.1
+name: SSL/TLS Encrypted Connection for MySQL/MariaDB/Percona
+id: mysql-ssl
+targetEditions: any
+description: Enforce DB Connection to use SSL/TLS in MySQL/MariaDB/Percona cluster/standalone. Certificate folder /var/lib/jelastic/keys/SSL-TLS.
+baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/mysql-ssl-addon/main
+
+settings:
+  fields:
+    - type: list
+      name: envName
+      caption: Environment
+      required: true
+      values: []
+
+    - type: list
+      name: nodeGroups
+      caption: Node Group(s)
+      required: true
+      multiSelect: true
+      dependsOn:
+        envName: {}
+
+onBeforeInit: scripts/onBeforeInit.js
+
+onInstall:
+  - install [${settings.nodeGroups}]:
+      envName: ${settings.envName}
+      jps: logic.jps?_r=${fn.random}
+      settings:
+        nodeGroups: ${settings.nodeGroups}
+        envName: ${settings.envName}
+        
+success:
+  email: false
+  text: |
+    Your SSL/TLS Encrypted Connection for MySQL/MariaDB/Percona application has been successfully deployed to ${settings.envName} (target layers: ${settings.nodeGroups}).

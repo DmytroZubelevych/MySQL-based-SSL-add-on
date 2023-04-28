@@ -1,0 +1,178 @@
+type: update
+jpsVersion: 6.1.1
+name: SSL/TLS Encrypted Connection
+id: mysql-ssl-logic
+targetEditions: any
+description: Enforce DB Connection to use SSL/TLS. Certificate folder /var/lib/jelastic/keys/SSL-TLS
+baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/mysql-ssl-addon/main
+
+targetNodes:
+  nodeType:
+    - mysql
+    - mysql8
+    - mysql5
+    - mariadb-dockerized
+    - mariadb10
+    - mariadb106
+    - mariadb108
+    - mariadb104 
+    - mariadb103
+    - mariadb1010
+    - mariadb107
+    - mariadb109
+    - mariadb105
+    - percona5
+    - percona5.7
+    - percona8
+    - percona8.0
+    - perconadb
+    - proxysql
+
+onInstall:
+  - checkApplication
+  - turnOnSSLForNodes:
+      nodesToEnableSSL: ${targetNodes.nodeGroup}
+
+onUninstall:
+  - disableSSL
+
+onAfterRedeployContainer[${targetNodes.nodeGroup}]:
+  - if (!${event.params.useExistingVolumes:true}):
+     - turnOnSSLForNodes:
+         nodesToEnableSSL: ${targetNodes.nodeGroup}
+      
+onAfterServiceScaleOut[${targetNodes.nodeGroup}]:
+  - addCertsForNewNodes
+  - fixCertOwnPerm
+  - if ('${event.params.nodeGroup}'.indexOf('sqldb') > -1):
+    - cmd[${targetNodes.nodeGroup}]: jem service restart
+
+onAfterResetServicePassword[${targetNodes.nodeGroup}]:
+  - if ('${event.params.nodeGroup}'.indexOf('sqldb') > -1):
+    - if (nodes.pgpool):
+      - getPswd
+      - setWebadminPasswordOnPgPool
+
+onAfterClone:
+  - script: return {result:0, jps:MANIFEST};
+  - install [${settings.nodeGroups}]:
+      envName: ${event.response.env.envName}
+      jps: ${response.jps}
+      settings:
+        nodeGroups: ${settings.nodeGroups}
+        envName: ${settings.envName}
+
+buttons:
+  - confirmText: Do you want to reissue the SSL certificates and key (service restart needed)?
+    loadingText: Reissuing the certificates...
+    action: reGenerateCerts
+    caption: Re-issue certificates
+    successText: Certificates reissued successfully
+
+actions:
+  reGenerateCerts:
+    - cmd[${targetNodes.nodeGroup}]: rm -rf /var/lib/jelastic/keys/SSL-TLS/*;
+    - generateCerts:
+        affectedNodes: ${targetNodes.nodeGroup}
+    - cmd[${targetNodes.nodeGroup}]: jem service restart
+    - fixCertOwnPerm
+
+  generateCerts:
+    - cmd[${this.affectedNodes}]: |-
+        [ -f /usr/local/sbin/selfcertgen ] && rm -f /usr/local/sbin/selfcertgen;
+        wget -O /usr/local/sbin/selfcertgen ${baseUrl}/scripts/selfcertgen?_r=${fn.random};
+        chmod +x /usr/local/sbin/selfcertgen
+        selfcertgen;
+        chown -R 700:700 /var/lib/jelastic/keys/SSL-TLS /usr/local/sbin/selfcertgen; chmod 600 /var/lib/jelastic/keys/SSL-TLS/*
+      user: root
+    - cmd[${this.affectedNodes}]: |-
+        rm -rf /var/lib/jelastic/keys/SSL-TLS/client; mkdir -p /var/lib/jelastic/keys/SSL-TLS/client;
+        rm -rf /var/lib/jelastic/keys/SSL-TLS/server; mkdir -p /var/lib/jelastic/keys/SSL-TLS/server;
+        chown -R 700:700 /var/lib/jelastic/keys/SSL-TLS/*
+        rm -f /var/lib/jelastic/keys/SSL-TLS/client.csr
+        for i in client.crt client.key
+        do
+            [ -f /var/lib/jelastic/keys/SSL-TLS/${i} ] && mv -f /var/lib/jelastic/keys/SSL-TLS/${i} /var/lib/jelastic/keys/SSL-TLS/client/${i}
+        done
+        for i in root.crt root.srl server.crt server.key
+        do
+            [ -f /var/lib/jelastic/keys/SSL-TLS/${i} ] && mv -f /var/lib/jelastic/keys/SSL-TLS/${i} /var/lib/jelastic/keys/SSL-TLS/server/${i}
+        done
+        ln -sfT /var/lib/jelastic/keys/SSL-TLS/server/root.crt /var/lib/jelastic/keys/SSL-TLS/client/root.crt
+      user: root
+
+  enableSSL:
+    - cmd[${this.affectedNodes}]: |-
+        [ -e '/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' ] && DB_CONFIG_FILE='/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' || DB_CONFIG_FILE='/etc/my.cnf'
+        echo "/var/lib/jelastic/keys/SSL-TLS" >> /etc/jelastic/redeploy.conf
+        source /etc/jelastic/metainf.conf
+        if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
+            grep -q '^[[:space:]]*ssl-cipher' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl-cipher=ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-SHA' ${DB_CONFIG_FILE}
+            grep -q '^[[:space:]]*ssl_ca' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl_key=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.key' ${DB_CONFIG_FILE}
+            grep -q '^[[:space:]]*ssl_cert' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl_cert=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.crt' ${DB_CONFIG_FILE}
+            grep -q '^[[:space:]]*ssl_key' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl_ca=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/root.crt' ${DB_CONFIG_FILE}
+            jem service restart
+        else
+            ln -sfT /var/lib/jelastic/keys/SSL-TLS/server/root.crt /var/lib/proxysql/proxysql-ca.pem; 
+            ln -sfT /var/lib/jelastic/keys/SSL-TLS/server/server.key /var/lib/proxysql/proxysql-key.pem; 
+            ln -sfT /var/lib/jelastic/keys/SSL-TLS/server/server.crt /var/lib/proxysql/proxysql-cert.pem;
+            mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE mysql_servers SET use_ssl=1 WHERE port=3306;"
+            mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE global_variables SET variable_value='true' WHERE variable_name='mysql-have_ssl';"
+            mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "LOAD MYSQL VARIABLES TO RUNTIME;"
+            mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "SAVE MYSQL VARIABLES TO DISK;"
+        fi
+      user: root
+  
+  disableSSL:
+    - cmd[${targetNodes.nodeGroup}]: |-
+        source /etc/jelastic/metainf.conf
+        [ -e '/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' ] && DB_CONFIG_FILE='/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' || DB_CONFIG_FILE='/etc/my.cnf'
+        jem service stop
+        if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
+            sed -ci -e '/^[[:space:]]*ssl-cipher/d' ${DB_CONFIG_FILE}
+            sed -ci -e '/^[[:space:]]*ssl_ca/d' ${DB_CONFIG_FILE}
+            sed -ci -e '/^[[:space:]]*ssl_cert/d' ${DB_CONFIG_FILE}
+            sed -ci -e '/^[[:space:]]*ssl_key/d' ${DB_CONFIG_FILE}
+            jem service start
+        else
+            mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE mysql_servers SET use_ssl=0 WHERE port=3306;"
+            mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "UPDATE global_variables SET variable_value='false' WHERE variable_name='mysql-have_ssl';"
+            mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "LOAD MYSQL VARIABLES TO RUNTIME;"
+            mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "SAVE MYSQL VARIABLES TO DISK;"
+            rm -f /var/lib/proxysql/proxysql-ca.pem;
+            rm -f /var/lib/proxysql/proxysql-key.pem;
+            rm -f /var/lib/proxysql/proxysql-cert.pem;
+        fi
+      user: root
+
+  addCertsForNewNodes:
+    - turnOnSSLForNodes:
+        nodesToEnableSSL: ${event.response.nodes.join(id,)}
+
+  checkAppVersion:
+    - cmd[${this.masternode}]: |-
+        source /etc/jelastic/metainf.conf
+        [ -f /root/check_app.sh ] && rm -f /root/check_app.sh;
+        wget -O /root/check_app.sh ${baseUrl}/scripts/check_app.sh?_r=${fn.random};
+        bash /root/check_app.sh;
+      user: root
+
+  fixCertOwnPerm:
+    - cmd[${targetNodes.nodeGroup}]: |-
+        chown -R 700:700 /var/lib/jelastic/keys/SSL-TLS
+      user: root
+        
+  turnOnSSLForNodes:
+    - generateCerts: 
+        affectedNodes: ${this.nodesToEnableSSL}
+    - enableSSL:
+        affectedNodes: ${this.nodesToEnableSSL}
+
+  checkApplication:
+    - if ('${targetNodes.nodeGroup}'.indexOf('sqldb') > -1):
+      - checkAppVersion:
+          masternode: ${targetNodes.nodeGroup}
+      - if (response.out == "Non-supported"):
+        - stopEvent:
+            type: warning
+            message: Database version is not supported.
