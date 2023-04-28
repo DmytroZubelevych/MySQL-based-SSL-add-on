@@ -153,17 +153,17 @@ actions:
         fi
         for i in client.crt client.key root.crt
         do
-            rm -f /var/lib/jelastic/keys/SSL-TLS/client/${i}
+            rm -f ${globals.certFolder}/client/${i}
         done
         for i in root.crt root.srl server.crt server.key
         do
-            rm -f /var/lib/jelastic/keys/SSL-TLS/server/${i}
+            rm -f ${globals.certFolder}/server/${i}
         done
         sed -ci -e '/\/var\/lib\/jelastic\/keys\/SSL-TLS/d' /etc/jelastic/redeploy.conf
         for i in client server
         do
-            if [ -z "$(ls -A /var/lib/jelastic/keys/SSL-TLS/${i})" ]; then
-                rm -rf /var/lib/jelastic/keys/SSL-TLS/${i}
+            if [ -z "$(ls -A ${globals.certFolder}/${i})" ]; then
+                rm -rf ${globals.certFolder}/${i}
             fi
         done
       user: root
