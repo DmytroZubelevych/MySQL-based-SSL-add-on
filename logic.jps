@@ -72,7 +72,10 @@ actions:
     - cmd[${targetNodes.nodeGroup}]: rm -rf ${globals.certFolder}/*;
     - generateCerts:
         affectedNodes: ${targetNodes.nodeGroup}
-    - cmd[${targetNodes.nodeGroup}]: jem service restart
+    - cmd[${targetNodes.nodeGroup}]: |-
+        if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
+            jem service restart
+        fi
     - fixCertOwnPerm
 
   generateCerts:
