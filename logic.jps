@@ -44,14 +44,8 @@ onAfterRedeployContainer[${targetNodes.nodeGroup}]:
 onAfterServiceScaleOut[${targetNodes.nodeGroup}]:
   - addCertsForNewNodes
   - fixCertOwnPerm
-  - if ('${event.params.nodeGroup}'.indexOf('sqldb') > -1):
-    - cmd[${targetNodes.nodeGroup}]: jem service restart
-
-onAfterResetServicePassword[${targetNodes.nodeGroup}]:
-  - if ('${event.params.nodeGroup}'.indexOf('sqldb') > -1):
-    - if (nodes.pgpool):
-      - getPswd
-      - setWebadminPasswordOnPgPool
+  - enableSSL:
+      affectedNodes: ${event.response.nodes.join(id,)}
 
 onAfterClone:
   - script: return {result:0, jps:MANIFEST};
