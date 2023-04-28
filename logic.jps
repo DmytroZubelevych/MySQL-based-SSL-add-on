@@ -27,6 +27,10 @@ targetNodes:
     - percona8.0
     - perconadb
     - proxysql
+    
+globals:
+  proxysqlDir: /var/lib/proxysql
+  certFolder: /var/lib/jelastic/keys/SSL-TLS
 
 onInstall:
   - checkApplication
@@ -80,9 +84,9 @@ actions:
         chown -R 700:700 /var/lib/jelastic/keys/SSL-TLS /usr/local/sbin/selfcertgen; chmod 600 /var/lib/jelastic/keys/SSL-TLS/*
       user: root
     - cmd[${this.affectedNodes}]: |-
-        rm -rf /var/lib/jelastic/keys/SSL-TLS/client; mkdir -p /var/lib/jelastic/keys/SSL-TLS/client;
-        rm -rf /var/lib/jelastic/keys/SSL-TLS/server; mkdir -p /var/lib/jelastic/keys/SSL-TLS/server;
-        chown -R 700:700 /var/lib/jelastic/keys/SSL-TLS/*
+        rm -rf ${globals.certFolder}/client; mkdir -p ${globals.certFolder}/client;
+        rm -rf ${globals.certFolder}/server; mkdir -p ${globals.certFolder}/server;
+        chown -R 700:700 ${globals.certFolder}/*
         rm -f /var/lib/jelastic/keys/SSL-TLS/client.csr
         for i in client.crt client.key
         do
@@ -107,9 +111,9 @@ actions:
             grep -q '^[[:space:]]*ssl_key' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl_ca=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/root.crt' ${DB_CONFIG_FILE}
             jem service restart
         else
-            ln -sfT /var/lib/jelastic/keys/SSL-TLS/server/root.crt /var/lib/proxysql/proxysql-ca.pem; 
-            ln -sfT /var/lib/jelastic/keys/SSL-TLS/server/server.key /var/lib/proxysql/proxysql-key.pem; 
-            ln -sfT /var/lib/jelastic/keys/SSL-TLS/server/server.crt /var/lib/proxysql/proxysql-cert.pem;
+            ln -sfT ${globals.certFolder}/server/root.crt ${globals.proxysqlDir}/proxysql-ca.pem; 
+            ln -sfT ${globals.certFolder}/server/server.key ${globals.proxysqlDir}/proxysql-key.pem; 
+            ln -sfT ${globals.certFolder}/server/server.crt ${globals.proxysqlDir}/proxysql-cert.pem;
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE mysql_servers SET use_ssl=1 WHERE port=3306;"
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE global_variables SET variable_value='true' WHERE variable_name='mysql-have_ssl';"
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "LOAD MYSQL VARIABLES TO RUNTIME;"
@@ -141,9 +145,9 @@ actions:
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "UPDATE global_variables SET variable_value='false' WHERE variable_name='mysql-have_ssl';"
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "LOAD MYSQL VARIABLES TO RUNTIME;"
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "SAVE MYSQL VARIABLES TO DISK;"
-            rm -f /var/lib/proxysql/proxysql-ca.pem;
-            rm -f /var/lib/proxysql/proxysql-key.pem;
-            rm -f /var/lib/proxysql/proxysql-cert.pem;
+            rm -f ${globals.proxysqlDir}/proxysql-ca.pem;
+            rm -f ${globals.proxysqlDir}/proxysql-key.pem;
+            rm -f ${globals.proxysqlDir}/proxysql-cert.pem;
         fi
       user: root
 
@@ -161,7 +165,7 @@ actions:
 
   fixCertOwnPerm:
     - cmd[${targetNodes.nodeGroup}]: |-
-        chown -R 700:700 /var/lib/jelastic/keys/SSL-TLS
+        chown -R 700:700 ${globals.certFolder}
       user: root
         
   turnOnSSLForNodes:
