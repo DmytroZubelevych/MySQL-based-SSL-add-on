@@ -116,6 +116,14 @@ actions:
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "SAVE MYSQL VARIABLES TO DISK;"
         fi
       user: root
+    - if (nodes.pgpool):
+        - cmd[${this.affectedNodes}]: |-
+            source /etc/jelastic/metainf.conf
+            if [ "x$COMPUTE_TYPE" == "xproxysql" ] ; then
+                mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE mysql_servers SET use_ssl=1 WHERE port=3306;"
+                mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "LOAD MYSQL VARIABLES TO RUNTIME;"
+                mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "SAVE MYSQL VARIABLES TO DISK;"
+            fi
   
   disableSSL:
     - cmd[${targetNodes.nodeGroup}]: |-
