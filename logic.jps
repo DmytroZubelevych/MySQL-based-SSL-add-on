@@ -117,6 +117,7 @@ actions:
             ln -sfT ${globals.certFolder}/server/root.crt ${globals.proxysqlDir}/proxysql-ca.pem; 
             ln -sfT ${globals.certFolder}/server/server.key ${globals.proxysqlDir}/proxysql-key.pem; 
             ln -sfT ${globals.certFolder}/server/server.crt ${globals.proxysqlDir}/proxysql-cert.pem;
+            sudo service proxysql status || jem service restart
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE global_variables SET variable_value='true' WHERE variable_name='mysql-have_ssl';"
         fi
       user: root
@@ -124,6 +125,7 @@ actions:
         - cmd[${targetNodes.nodeGroup}]: |-
             source /etc/jelastic/metainf.conf
             if [ "x$COMPUTE_TYPE" == "xproxysql" ] ; then
+                sudo service proxysql status || jem service restart
                 mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE mysql_servers SET use_ssl=1 WHERE port=3306;"
                 mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "LOAD MYSQL VARIABLES TO RUNTIME;"
                 mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "SAVE MYSQL VARIABLES TO DISK;"
@@ -141,6 +143,7 @@ actions:
             sed -ci -e '/^[[:space:]]*ssl_key/d' ${DB_CONFIG_FILE}
             jem service start
         else
+            sudo service proxysql status || jem service restart
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE mysql_servers SET use_ssl=0 WHERE port=3306;"
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "UPDATE global_variables SET variable_value='false' WHERE variable_name='mysql-have_ssl';"
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032  -e "LOAD MYSQL VARIABLES TO RUNTIME;"
@@ -149,7 +152,6 @@ actions:
             do
                 rm -f ${globals.proxysqlDir}/${i};
             done
-            
         fi
         for i in client.crt client.key root.crt
         do
