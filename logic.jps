@@ -121,7 +121,7 @@ actions:
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE global_variables SET variable_value='true' WHERE variable_name='mysql-have_ssl';"
         fi
       user: root
-    - if (nodes.pgpool):
+    - if (nodes.proxysql):
         - cmd[${targetNodes.nodeGroup}]: |-
             source /etc/jelastic/metainf.conf
             if [ "x$COMPUTE_TYPE" == "xproxysql" ] ; then
