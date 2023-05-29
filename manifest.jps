@@ -9,8 +9,22 @@ baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/mysql-ssl-addon/main
 targetNodes:
   nodeType:
     - mysql
+    - mysql8
+    - mysql5
     - mariadb-dockerized
-    - mariadb
+    - mariadb10
+    - mariadb106
+    - mariadb108
+    - mariadb104 
+    - mariadb103
+    - mariadb1010
+    - mariadb107
+    - mariadb109
+    - mariadb105
+    - percona5
+    - percona5.7
+    - percona8
+    - percona8.0
     - perconadb
     - proxysql
 
