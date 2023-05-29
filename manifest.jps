@@ -6,6 +6,14 @@ targetEditions: any
 description: Enforce DB Connection to use SSL/TLS in MySQL/MariaDB/Percona cluster/standalone. Certificate folder /var/lib/jelastic/keys/SSL-TLS.
 baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/mysql-ssl-addon/main
 
+targetNodes:
+  nodeType:
+    - mysql
+    - mariadb-dockerized
+    - mariadb
+    - perconadb
+    - proxysql
+
 settings:
   fields:
     - type: list
