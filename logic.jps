@@ -106,9 +106,10 @@ actions:
   enableSSL:
     - cmd[${this.affectedNodes}]: |-
         touch ${globals.dbConfigFile}
+        chown 700:700 ${globals.dbConfigFile}
       user: root
     - cmd[${this.affectedNodes}]: |-
-        echo "${globals.certFolder}" >> ${globals.dbConfigFile}
+        echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
             grep -q '^[[:space:]]*\[mysqld\]' ${globals.dbConfigFile} || echo '[mysqld]' >> ${globals.dbConfigFile}
