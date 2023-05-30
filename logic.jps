@@ -113,6 +113,7 @@ actions:
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
             grep -q '^[[:space:]]*\[mysqld\]' ${globals.dbConfigFile} || echo '[mysqld]' >> ${globals.dbConfigFile}
+            grep -q '^[[:space:]]*require_secure_transport=ON' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\require_secure_transport=ON' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl-cipher' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl-cipher=ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-SHA' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl_ca' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_key=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.key' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl_cert' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_cert=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.crt' ${globals.dbConfigFile}
@@ -142,6 +143,7 @@ actions:
         touch ${globals.dbConfigFile}
         jem service stop
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
+            sed -ci -e '/^[[:space:]]*require_secure_transport=ON/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl-cipher/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl_ca/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl_cert/d' ${globals.dbConfigFile}
