@@ -56,7 +56,7 @@ onAfterClone:
   - install [${settings.nodeGroups}]:
       envName: ${event.response.env.envName}
       jps: ${response.jps}
-      settings:
+      settings:        
         nodeGroups: ${settings.nodeGroups}
         envName: ${settings.envName}
 
@@ -104,10 +104,12 @@ actions:
 
   enableSSL:
     - cmd[${this.affectedNodes}]: |-
-        [ -e '/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' ] && DB_CONFIG_FILE='/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' || DB_CONFIG_FILE='/etc/my.cnf'
+        DB_CONFIG_FILE='/etc/my.cnf.d/ssl-config.cnf'
+        touch /etc/my.cnf.d/ssl-config.cnf
         echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
+            grep -q '^[[:space:]]*\[mysqld\]' ${DB_CONFIG_FILE} || echo '[mysqld]' >> ${DB_CONFIG_FILE}
             grep -q '^[[:space:]]*ssl-cipher' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl-cipher=ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-SHA' ${DB_CONFIG_FILE}
             grep -q '^[[:space:]]*ssl_ca' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl_key=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.key' ${DB_CONFIG_FILE}
             grep -q '^[[:space:]]*ssl_cert' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl_cert=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.crt' ${DB_CONFIG_FILE}
@@ -134,7 +136,8 @@ actions:
   disableSSL:
     - cmd[${targetNodes.nodeGroup}]: |-
         source /etc/jelastic/metainf.conf
-        [ -e '/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' ] && DB_CONFIG_FILE='/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' || DB_CONFIG_FILE='/etc/my.cnf'
+        DB_CONFIG_FILE='/etc/my.cnf.d/ssl-config.cnf'
+        touch /etc/my.cnf.d/ssl-config.cnf
         jem service stop
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
             sed -ci -e '/^[[:space:]]*ssl-cipher/d' ${DB_CONFIG_FILE}
