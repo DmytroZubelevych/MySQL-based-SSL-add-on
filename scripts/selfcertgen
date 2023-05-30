@@ -20,11 +20,15 @@ CERT_DIR="/var/lib/jelastic/keys/SSL-TLS";
 
 #generating server key, cert and root cert
 if [ ! -f ${CERT_DIR}/server.crt ]; then
+    openssl genrsa -out ${CERT_DIR}/root.key ${KEY_SIZE}
     openssl genrsa -out ${CERT_DIR}/server.key ${KEY_SIZE}
-    chmod 400 ${CERT_DIR}/server.key
-    chown mysql:mysql ${CERT_DIR}/server.key
-    openssl req -new -key ${CERT_DIR}/server.key -days ${KEY_EXPIRE} -out ${CERT_DIR}/server.crt -x509 -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=$KEY_HOST";
-    cp ${CERT_DIR}/server.crt ${CERT_DIR}/root.crt
+    chmod 400 ${CERT_DIR}/server.key ${CERT_DIR}/root.key
+    chown mysql:mysql ${CERT_DIR}/server.key ${CERT_DIR}/root.key
+    openssl req -new -key ${CERT_DIR}/server.key -days ${KEY_EXPIRE} -out ${CERT_DIR}/server.crt -x509 -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}CA";
+    #cp ${CERT_DIR}/server.crt ${CERT_DIR}/root.crt
+    openssl req -new -key ${CERT_DIR}/server.key -out ${CERT_DIR}/server.csr -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}"
+   	#signing the server cert
+    openssl x509 -req -in ${CERT_DIR}/server.csr -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -out ${CERT_DIR}/server.crt -CAcreateserial
 fi
 
     #generating client certs
