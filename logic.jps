@@ -1,10 +1,10 @@
 type: update
 jpsVersion: 6.1.1
 name: SSL/TLS Encrypted Connection
-id: mysql-based-ssl-logic
+id: mysql-ssl-logic
 targetEditions: any
 description: Enforce DB Connection to use SSL/TLS. Certificate folder /var/lib/jelastic/keys/SSL-TLS
-baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/MySQL-based-SSL-add-on/main
+baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/mysql-ssl-addon/main
 
 targetNodes:
   nodeType:
@@ -29,7 +29,6 @@ targetNodes:
     - proxysql
     
 globals:
-  dbConfigFile: /etc/mysql/conf.d/ssl-config.cnf
   proxysqlDir: /var/lib/proxysql
   certFolder: /var/lib/jelastic/keys/SSL-TLS
 
@@ -57,7 +56,7 @@ onAfterClone:
   - install [${settings.nodeGroups}]:
       envName: ${event.response.env.envName}
       jps: ${response.jps}
-      settings:        
+      settings:
         nodeGroups: ${settings.nodeGroups}
         envName: ${settings.envName}
 
@@ -105,18 +104,14 @@ actions:
 
   enableSSL:
     - cmd[${this.affectedNodes}]: |-
-        touch ${globals.dbConfigFile}
-        chown 700:700 ${globals.dbConfigFile}
-      user: root
-    - cmd[${this.affectedNodes}]: |-
+        [ -e '/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' ] && DB_CONFIG_FILE='/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' || DB_CONFIG_FILE='/etc/my.cnf'
         echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
-            grep -q '^[[:space:]]*\[mysqld\]' ${globals.dbConfigFile} || echo '[mysqld]' >> ${globals.dbConfigFile}
-            grep -q '^[[:space:]]*ssl-cipher' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl-cipher=ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-SHA' ${globals.dbConfigFile}
-            grep -q '^[[:space:]]*ssl_ca' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_key=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.key' ${globals.dbConfigFile}
-            grep -q '^[[:space:]]*ssl_cert' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_cert=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.crt' ${globals.dbConfigFile}
-            grep -q '^[[:space:]]*ssl_key' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_ca=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/root.crt' ${globals.dbConfigFile}
+            grep -q '^[[:space:]]*ssl-cipher' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl-cipher=ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-SHA' ${DB_CONFIG_FILE}
+            grep -q '^[[:space:]]*ssl_ca' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl_key=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.key' ${DB_CONFIG_FILE}
+            grep -q '^[[:space:]]*ssl_cert' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl_cert=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.crt' ${DB_CONFIG_FILE}
+            grep -q '^[[:space:]]*ssl_key' ${DB_CONFIG_FILE} || sed -ci -e '/\[mysqld\]/ a\ssl_ca=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/root.crt' ${DB_CONFIG_FILE}
             jem service restart
         else
             ln -sfT ${globals.certFolder}/server/root.crt ${globals.proxysqlDir}/proxysql-ca.pem; 
@@ -139,13 +134,13 @@ actions:
   disableSSL:
     - cmd[${targetNodes.nodeGroup}]: |-
         source /etc/jelastic/metainf.conf
-        touch ${globals.dbConfigFile}
+        [ -e '/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' ] && DB_CONFIG_FILE='/etc/percona-xtradb-cluster.conf.d/mysqld.cnf' || DB_CONFIG_FILE='/etc/my.cnf'
         jem service stop
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
-            sed -ci -e '/^[[:space:]]*ssl-cipher/d' ${globals.dbConfigFile}
-            sed -ci -e '/^[[:space:]]*ssl_ca/d' ${globals.dbConfigFile}
-            sed -ci -e '/^[[:space:]]*ssl_cert/d' ${globals.dbConfigFile}
-            sed -ci -e '/^[[:space:]]*ssl_key/d' ${globals.dbConfigFile}
+            sed -ci -e '/^[[:space:]]*ssl-cipher/d' ${DB_CONFIG_FILE}
+            sed -ci -e '/^[[:space:]]*ssl_ca/d' ${DB_CONFIG_FILE}
+            sed -ci -e '/^[[:space:]]*ssl_cert/d' ${DB_CONFIG_FILE}
+            sed -ci -e '/^[[:space:]]*ssl_key/d' ${DB_CONFIG_FILE}
             jem service start
         else
             sudo service proxysql status || jem service restart
