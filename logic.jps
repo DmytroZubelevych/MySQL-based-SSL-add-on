@@ -4,7 +4,7 @@ name: SSL/TLS Encrypted Connection
 id: mysql-ssl-logic
 targetEditions: any
 description: Enforce DB Connection to use SSL/TLS. Certificate folder /var/lib/jelastic/keys/SSL-TLS
-baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/mysql-ssl-addon/main
+baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/MySQL-based-SSL-add-on/main
 
 targetNodes:
   nodeType:
