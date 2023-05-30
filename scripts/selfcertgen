@@ -24,7 +24,7 @@ if [ ! -f ${CERT_DIR}/server.crt ]; then
     openssl genrsa -out ${CERT_DIR}/server.key ${KEY_SIZE}
     chmod 400 ${CERT_DIR}/server.key ${CERT_DIR}/root.key
     chown mysql:mysql ${CERT_DIR}/server.key ${CERT_DIR}/root.key
-    openssl req -new -key ${CERT_DIR}/server.key -days ${KEY_EXPIRE} -out ${CERT_DIR}/server.crt -x509 -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}CA";
+    openssl req -new -key ${CERT_DIR}/root.key -days ${KEY_EXPIRE} -out ${CERT_DIR}/root.crt -x509 -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}CA";
     #cp ${CERT_DIR}/server.crt ${CERT_DIR}/root.crt
     openssl req -new -key ${CERT_DIR}/server.key -out ${CERT_DIR}/server.csr -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}"
    	#signing the server cert
