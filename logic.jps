@@ -29,7 +29,7 @@ targetNodes:
     - proxysql
     
 globals:
-  dbConfigFile: /etc/my.cnf.d/ssl-config.cnf
+  dbConfigFile: /etc/mysql/conf.d/ssl-config.cnf
   proxysqlDir: /var/lib/proxysql
   certFolder: /var/lib/jelastic/keys/SSL-TLS
 
