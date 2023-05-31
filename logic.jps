@@ -105,8 +105,10 @@ actions:
 
   enableSSL:
     - cmd[${this.affectedNodes}]: |-
-        touch ${globals.dbConfigFile}
-        chown 700:700 ${globals.dbConfigFile}
+        if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
+            touch ${globals.dbConfigFile}
+            chown 700:700 ${globals.dbConfigFile}
+        fi
       user: root
     - cmd[${this.affectedNodes}]: |-
         echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
@@ -140,9 +142,9 @@ actions:
   disableSSL:
     - cmd[${targetNodes.nodeGroup}]: |-
         source /etc/jelastic/metainf.conf
-        touch ${globals.dbConfigFile}
         jem service stop
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
+            touch ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*require_secure_transport=ON/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl-cipher/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl_ca/d' ${globals.dbConfigFile}
