@@ -3,6 +3,8 @@ jpsVersion: 6.1.1
 name: SSL/TLS Encrypted Connection for MySQL-based databases (MySQL/MariaDB/Percona)
 id: mysql-based-ssl
 targetEditions: any
+categories:
+  - apps/dev-and-admin-tools
 description: Enforce DB Connection to use SSL/TLS in MySQL/MariaDB/Percona cluster/standalone. Certificate folder /var/lib/jelastic/keys/SSL-TLS.
 baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/MySQL-based-SSL-add-on/main
 
