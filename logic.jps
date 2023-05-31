@@ -105,6 +105,7 @@ actions:
 
   enableSSL:
     - cmd[${this.affectedNodes}]: |-
+        source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
             touch ${globals.dbConfigFile}
             chown 700:700 ${globals.dbConfigFile}
