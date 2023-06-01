@@ -75,7 +75,7 @@ actions:
         affectedNodes: ${targetNodes.nodeGroup}
     - fixCertOwnPerm
     - restartNodes:
-        nodeGroup: "sqldb"
+        nodeGroup: ${targetNodes.nodeGroup}
         isSequential: true
 
   generateCerts:
