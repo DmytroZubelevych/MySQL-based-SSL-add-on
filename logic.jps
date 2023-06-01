@@ -130,11 +130,10 @@ actions:
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "LOAD MYSQL VARIABLES TO RUNTIME; SAVE MYSQL VARIABLES TO DISK;"
         fi
       user: root
-    - forEach(${this.affectedNodes}):
-        - cmd[${i.id}]: |-
-            if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
-                jem service restart
-            fi
+    - if ('${targetNodes.nodeGroup}'.indexOf('proxysql') == -1):
+        - restartNodes:
+            nodeGroup: ${targetNodes.nodeGroup}
+            isSequential: true
     - if (nodes.proxysql):
         - cmd[${targetNodes.nodeGroup}]: |-
             source /etc/jelastic/metainf.conf
