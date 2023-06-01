@@ -121,7 +121,6 @@ actions:
             grep -q '^[[:space:]]*ssl_ca' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_key=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.key' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl_cert' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_cert=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.crt' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl_key' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_ca=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/root.crt' ${globals.dbConfigFile}
-            jem service restart
         else
             ln -sfT ${globals.certFolder}/server/root.crt ${globals.proxysqlDir}/proxysql-ca.pem; 
             ln -sfT ${globals.certFolder}/server/server.key ${globals.proxysqlDir}/proxysql-key.pem; 
@@ -131,6 +130,11 @@ actions:
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "LOAD MYSQL VARIABLES TO RUNTIME; SAVE MYSQL VARIABLES TO DISK;"
         fi
       user: root
+    - forEach(${this.affectedNodes}):
+        - cmd[${i.id}]: |-
+            if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
+                jem service restart
+            fi
     - if (nodes.proxysql):
         - cmd[${targetNodes.nodeGroup}]: |-
             source /etc/jelastic/metainf.conf
