@@ -74,9 +74,10 @@ actions:
     - generateCerts:
         affectedNodes: ${targetNodes.nodeGroup}
     - fixCertOwnPerm
-    - restartNodes:
-        nodeGroup: ${targetNodes.nodeGroup}
-        isSequential: true
+    - if ('${targetNodes.nodeGroup}'.indexOf('proxysql') == -1):
+        - restartNodes:
+            nodeGroup: ${targetNodes.nodeGroup}
+            isSequential: true
 
   generateCerts:
     - cmd[${this.affectedNodes}]: |-
@@ -166,9 +167,10 @@ actions:
             done
         fi
       user: root
-    - restartNodes:
-        nodeGroup: ${targetNodes.nodeGroup}
-        isSequential: true
+    - if ('${targetNodes.nodeGroup}'.indexOf('proxysql') == -1):
+        - restartNodes:
+            nodeGroup: ${targetNodes.nodeGroup}
+            isSequential: true
     - cmd[${targetNodes.nodeGroup}]: |-  
         for i in client.crt client.key root.crt
         do
