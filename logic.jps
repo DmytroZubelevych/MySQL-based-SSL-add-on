@@ -121,6 +121,7 @@ actions:
             grep -q '^[[:space:]]*ssl_ca' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_key=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.key' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl_cert' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_cert=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.crt' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl_key' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_ca=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/root.crt' ${globals.dbConfigFile}
+            grep -q '^[[:space:]]*!includedir^[[:space:]]*/etc/mysql/conf.d' /etc/my.cnf || echo '!includedir /etc/mysql/conf.d' >> /etc/my.cnf
         else
             ln -sfT ${globals.certFolder}/server/root.crt ${globals.proxysqlDir}/proxysql-ca.pem; 
             ln -sfT ${globals.certFolder}/server/server.key ${globals.proxysqlDir}/proxysql-key.pem; 
