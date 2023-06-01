@@ -146,7 +146,6 @@ actions:
   disableSSL:
     - cmd[${targetNodes.nodeGroup}]: |-
         source /etc/jelastic/metainf.conf
-        jem service stop
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
             touch ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*require_secure_transport=ON/d' ${globals.dbConfigFile}
@@ -154,7 +153,7 @@ actions:
             sed -ci -e '/^[[:space:]]*ssl_ca/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl_cert/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl_key/d' ${globals.dbConfigFile}
-            jem service start
+            jem service restart
         else
             sudo service proxysql status || jem service restart
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE mysql_servers SET use_ssl=0 WHERE port=3306;"
@@ -166,6 +165,11 @@ actions:
                 rm -f ${globals.proxysqlDir}/${i};
             done
         fi
+      user: root
+    - restartNodes:
+        nodeGroup: ${targetNodes.nodeGroup}
+        isSequential: true
+    - cmd[${targetNodes.nodeGroup}]: |-  
         for i in client.crt client.key root.crt
         do
             rm -f ${globals.certFolder}/client/${i}
