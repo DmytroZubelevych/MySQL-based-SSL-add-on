@@ -149,6 +149,7 @@ actions:
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
             touch ${globals.dbConfigFile}
+            chown 700:700 ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*require_secure_transport=ON/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl-cipher/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl_ca/d' ${globals.dbConfigFile}
