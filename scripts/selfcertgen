@@ -20,29 +20,43 @@ CERT_DIR="/var/lib/jelastic/keys/SSL-TLS";
 
 #generating server key, cert and root cert
 if [ ! -f ${CERT_DIR}/server.crt ]; then
-    openssl genrsa -out ${CERT_DIR}/root.key ${KEY_SIZE}
-    openssl genrsa -out ${CERT_DIR}/server.key ${KEY_SIZE}
-    chmod 400 ${CERT_DIR}/server.key ${CERT_DIR}/root.key
-    chown mysql:mysql ${CERT_DIR}/server.key ${CERT_DIR}/root.key
-    openssl req -new -key ${CERT_DIR}/root.key -days ${KEY_EXPIRE} -out ${CERT_DIR}/root.crt -x509 -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}CA";
+    #openssl genrsa -out ${CERT_DIR}/root.key ${KEY_SIZE}
+    #openssl genrsa -out ${CERT_DIR}/server.key ${KEY_SIZE}
+    #chmod 400 ${CERT_DIR}/server.key ${CERT_DIR}/root.key
+    #chown mysql:mysql ${CERT_DIR}/server.key ${CERT_DIR}/root.key
+    #openssl req -new -key ${CERT_DIR}/root.key -days ${KEY_EXPIRE} -out ${CERT_DIR}/root.crt -x509 -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}CA";
     #cp ${CERT_DIR}/server.crt ${CERT_DIR}/root.crt
-    openssl req -new -key ${CERT_DIR}/server.key -out ${CERT_DIR}/server.csr -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}"
-   	#signing the server cert
-    openssl x509 -req -in ${CERT_DIR}/server.csr -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -out ${CERT_DIR}/server.crt -CAcreateserial
+    #openssl req -new -key ${CERT_DIR}/server.key -out ${CERT_DIR}/server.csr -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}"
+   	####signing the server cert
+    #openssl x509 -req -in ${CERT_DIR}/server.csr -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -out ${CERT_DIR}/server.crt -CAcreateserial
+    
+    
+    RANDFILE=/tmp/.random openssl genrsa ${KEY_SIZE} > root.key
+    RANDFILE=/tmp/.random openssl req -new -x509 -nodes -days 3650 -key ${CERT_DIR}/ca-key.pem -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}CA" > ${CERT_DIR}/root.crt
+    RANDFILE=/tmp/.random openssl req -newkey rsa:2048 -days 3650 -nodes -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}" -keyout ${CERT_DIR}/server.key > ${CERT_DIR}/server-req.pem
+    RANDFILE=/tmp/.random openssl x509 -req -in ${CERT_DIR}/server-req.pem -days 3650 -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -set_serial 01 > ${CERT_DIR}/server.crt
+    chmod 400 ${CERT_DIR}/root.key ${CERT_DIR}/server.key ${CERT_DIR}/server.crt ${CERT_DIR}/root.crt
+    
 fi
 
-    #generating client certs
-    if [ "x${MYSQL_USER}" == "xroot" ]; then
-        CLIENT_CERT_NAME="client"
-    else
-        CLIENT_CERT_NAME="${MYSQL_USER}"
-    fi
+#generating client certs
+if [ "x${MYSQL_USER}" == "xroot" ]; then
+    CLIENT_CERT_NAME="client"
+else
+    CLIENT_CERT_NAME="${MYSQL_USER}"
+fi
 
-    if [ ! -f ${CERT_DIR}/${CLIENT_CERT_NAME}.crt ]; then
-        openssl genrsa -out ${CERT_DIR}/${CLIENT_CERT_NAME}.key ${KEY_SIZE}
-        openssl req -new -key ${CERT_DIR}/${CLIENT_CERT_NAME}.key -out ${CERT_DIR}/${CLIENT_CERT_NAME}.csr -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=$MYSQL_USER"
-   	#signing the client cert
-    openssl x509 -req -in ${CERT_DIR}/${CLIENT_CERT_NAME}.csr -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -out ${CERT_DIR}/${CLIENT_CERT_NAME}.crt -CAcreateserial
+if [ ! -f ${CERT_DIR}/${CLIENT_CERT_NAME}.crt ]; then
+    #openssl genrsa -out ${CERT_DIR}/${CLIENT_CERT_NAME}.key ${KEY_SIZE}
+    #openssl req -new -key ${CERT_DIR}/${CLIENT_CERT_NAME}.key -out ${CERT_DIR}/${CLIENT_CERT_NAME}.csr -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=$MYSQL_USER"
+   	####signing the client cert
+    #openssl x509 -req -in ${CERT_DIR}/${CLIENT_CERT_NAME}.csr -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -out ${CERT_DIR}/${CLIENT_CERT_NAME}.crt -CAcreateserial
+    
+    
+    RANDFILE=/tmp/.random openssl req -newkey rsa:2048 -days 3650 -nodes -keyout ${CERT_DIR}/client.key -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=$MYSQL_USER" > ${CERT_DIR}/client-req.pem
+    RANDFILE=/tmp/.random openssl x509 -req -in ${CERT_DIR}/client-req.pem -days 3650 -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -set_serial 01 > ${CERT_DIR}/${CLIENT_CERT_NAME}.crt
+    
+    
 fi
 
 
