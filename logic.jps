@@ -91,7 +91,7 @@ actions:
         rm -rf ${globals.certFolder}/client; mkdir -p ${globals.certFolder}/client;
         rm -rf ${globals.certFolder}/server; mkdir -p ${globals.certFolder}/server;
         chown -R 700:700 ${globals.certFolder}/*
-        rm -f ${globals.certFolder}/client.csr server.csr
+        rm -f ${globals.certFolder}/client.csr ${globals.certFolder}/server.csr ${globals.certFolder}/client-req.pem ${globals.certFolder}/server-req.pem
         for i in client.crt client.key
         do
             [ -f ${globals.certFolder}/${i} ] && mv -f ${globals.certFolder}/${i} ${globals.certFolder}/client/${i}
