@@ -31,7 +31,7 @@ if [ ! -f ${CERT_DIR}/server.crt ]; then
     #openssl x509 -req -in ${CERT_DIR}/server.csr -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -out ${CERT_DIR}/server.crt -CAcreateserial
     
     
-    RANDFILE=/tmp/.random openssl genrsa ${KEY_SIZE} > root.key
+    RANDFILE=/tmp/.random openssl genrsa ${KEY_SIZE} > ${CERT_DIR}/root.key
     RANDFILE=/tmp/.random openssl req -new -x509 -nodes -days 3650 -key ${CERT_DIR}/ca-key.pem -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}CA" > ${CERT_DIR}/root.crt
     RANDFILE=/tmp/.random openssl req -newkey rsa:2048 -days 3650 -nodes -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${KEY_HOST}" -keyout ${CERT_DIR}/server.key > ${CERT_DIR}/server-req.pem
     RANDFILE=/tmp/.random openssl x509 -req -in ${CERT_DIR}/server-req.pem -days 3650 -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -set_serial 01 > ${CERT_DIR}/server.crt
