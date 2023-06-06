@@ -83,6 +83,14 @@ actions:
         - restartNodes:
             nodeGroup: ${targetNodes.nodeGroup}
             isSequential: true
+            
+  getMasterId:
+    - forEach(nodes.${targetNodes.nodeGroup})
+      - cmd[${@i.id}]: |- 
+          source /.jelenv;  
+          echo ${MASTER_ID};
+      - setGlobals:
+          masterId: ${response.out}
 
   generateCerts:
     - cmd[${this.affectedNodes}]: |-
