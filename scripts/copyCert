@@ -1,0 +1,19 @@
+#!/bin/bash
+
+getKey(){
+    cat ${1} | openssl enc -base64 -e -aes-256-cbc -salt -pass pass:${KEY_PASS}
+}
+
+uploadKey(){
+    echo -e "${2}" | openssl enc -base64 -d -aes-256-cbc -salt -pass pass:${KEY_PASS} > ${1} && echo OK
+    chown -R 700:700 ${KEY}
+}
+
+case ${1} in
+    getKey)
+        getKey "${2}"
+        ;;
+    uploadKey)
+        uploadKey "${2}" "${3}"
+        ;;
+esac
