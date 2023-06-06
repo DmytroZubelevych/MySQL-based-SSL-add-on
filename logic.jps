@@ -38,6 +38,8 @@ globals:
 
 onInstall:
   - checkApplication
+  - env.control.AddContainerEnvVars[nosqldb]:
+      vars: {"TRANSFER_KEY":"${globals.transferKey}"}
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${targetNodes.nodeGroup}
 
