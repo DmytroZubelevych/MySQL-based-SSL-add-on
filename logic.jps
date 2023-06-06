@@ -6,6 +6,9 @@ targetEditions: any
 description: Enforce DB Connection to use SSL/TLS. Certificate folder /var/lib/jelastic/keys/SSL-TLS
 baseUrl: https://raw.githubusercontent.com/DmytroZubelevych/MySQL-based-SSL-add-on/main
 
+globals:
+  transferKey: ${fn.password}
+
 targetNodes:
   nodeType:
     - mysql
