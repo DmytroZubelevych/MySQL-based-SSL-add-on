@@ -3,6 +3,9 @@
 source /etc/profile
 source /etc/jelastic/metainf.conf 
 
+ENV_NAME=$2
+TARGET_LAYER=$3
+
 CERT_DIR="/var/lib/jelastic/keys/SSL-TLS";
 [ -d "$CERT_DIR" ] || mkdir -p "$CERT_DIR";
 
