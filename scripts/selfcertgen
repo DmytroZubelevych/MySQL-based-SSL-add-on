@@ -3,8 +3,17 @@
 source /etc/profile
 source /etc/jelastic/metainf.conf 
 
-ENV_NAME=$2
-TARGET_LAYER=$3
+TARGET_LAYER=$2
+ENV_NAME=$3
+
+if [ -z "${ENV_NAME}" ]; then
+    NODE_NAME_LENGTH=$(hostname|grep -o 'node[0-9]*-'|wc -c)
+    ENV_NAME=$(hostname|cut -c ${NODE_NAME_LENGTH}- 2>/dev/null)
+fi
+
+if [ -z "${TARGET_LAYER}" ]; then
+    TARGET_LAYER=${COMPUTE_TYPE}
+fi
 
 CERT_DIR="/var/lib/jelastic/keys/SSL-TLS";
 [ -d "$CERT_DIR" ] || mkdir -p "$CERT_DIR";
@@ -23,7 +32,7 @@ CERT_DIR="/var/lib/jelastic/keys/SSL-TLS";
 
 if [ ! -f ${CERT_DIR}/root.crt ]; then
     RANDFILE=/tmp/.random openssl genrsa ${KEY_SIZE} > ${CERT_DIR}/root.key
-    RANDFILE=/tmp/.random openssl req -new -x509 -nodes -days 3650 -key ${CERT_DIR}/root.key -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=sqldb" > ${CERT_DIR}/root.crt
+    RANDFILE=/tmp/.random openssl req -new -x509 -nodes -days 3650 -key ${CERT_DIR}/root.key -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${TARGET_LAYER}-${ENV_NAME}" > ${CERT_DIR}/root.crt
 fi
 
 if [ ! -f ${CERT_DIR}/server.crt ]; then
