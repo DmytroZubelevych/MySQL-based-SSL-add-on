@@ -195,6 +195,7 @@ actions:
                 rm -rf ${globals.certFolder}/${i}
             fi
         done
+        rm -rf ${globals.certFolder}
       user: root
 
   addCertsForNewNodes:
