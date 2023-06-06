@@ -38,6 +38,7 @@ globals:
 
 onInstall:
   - checkApplication
+  - getMasterId
   - env.control.AddContainerEnvVars[${targetNodes.nodeGroup}]:
       vars: {"KEY_PASS":"${fn.password}"}
   - turnOnSSLForNodes:
