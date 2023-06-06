@@ -89,8 +89,8 @@ actions:
         [ -f /usr/local/sbin/selfcertgen ] && rm -f /usr/local/sbin/selfcertgen;
         [ -f /usr/local/sbin/copyCert ] && rm -f /usr/local/sbin/copyCert;
         wget -O /usr/local/sbin/selfcertgen ${baseUrl}/scripts/selfcertgen?_r=${fn.random};
-        wget -O /root/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
-        chmod +x /usr/local/sbin/selfcertgen
+        wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
+        chmod +x /usr/local/sbin/selfcertgen /usr/local/sbin/copyCert
         selfcertgen;
         chown -R 700:700 ${globals.certFolder} /usr/local/sbin/selfcertgen; chmod 600 ${globals.certFolder}/*
       user: root
