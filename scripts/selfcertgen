@@ -4,7 +4,7 @@ source /etc/profile
 source /etc/jelastic/metainf.conf 
 
 TARGET_LAYER=$2
-ENV_NAME=$3
+ENV_NAME=$1
 
 if [ -z "${ENV_NAME}" ]; then
     NODE_NAME_LENGTH=$(hostname|grep -o 'node[0-9]*-'|wc -c)
