@@ -35,31 +35,6 @@ globals:
 
 onInstall:
   - checkApplication
-  - getMasterId
-  - env.control.AddContainerEnvVars[${targetNodes.nodeGroup}]:
-      vars: {"KEY_PASS":"${fn.password}"}
-  - cmd[${targetNodes.nodeGroup}]: |-
-      mkdir -p /var/lib/jelastic/keys/SSL-TLS/server/
-      wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
-      chmod +x /usr/local/sbin/copyCert
-    user: root
-  - turnOnSSLForNodes:
-      nodesToEnableSSL: ${globals.masterId}
-  - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.crt
-  - setGlobals:
-      rootCaCert: ${response.out}
-  - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.key
-  - setGlobals:
-      rootCaKey: ${response.out}
-  - cmd[${targetNodes.nodeGroup}]: |-
-      copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
-    user: root
-  - cmd[${targetNodes.nodeGroup}]: |-
-      copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
-    user: root
-  - cmd[${targetNodes.nodeGroup}]: |-
-      chown 700:700 ${globals.certFolder}/*
-    user: root
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${targetNodes.nodeGroup}
 
@@ -103,22 +78,12 @@ actions:
         - restartNodes:
             nodeGroup: ${targetNodes.nodeGroup}
             isSequential: true
-            
-  getMasterId:
-    - forEach(nodes.${targetNodes.nodeGroup}):
-      - cmd[${@i.id}]: |- 
-          source /.jelenv;  
-          echo ${MASTER_ID};
-      - setGlobals:
-          masterId: ${response.out}
 
   generateCerts:
     - cmd[${this.affectedNodes}]: |-
         [ -f /usr/local/sbin/selfcertgen ] && rm -f /usr/local/sbin/selfcertgen;
-        [ -f /usr/local/sbin/copyCert ] && rm -f /usr/local/sbin/copyCert;
         wget -O /usr/local/sbin/selfcertgen ${baseUrl}/scripts/selfcertgen?_r=${fn.random};
-        wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
-        chmod +x /usr/local/sbin/selfcertgen /usr/local/sbin/copyCert
+        chmod +x /usr/local/sbin/selfcertgen
         selfcertgen;
         chown -R 700:700 ${globals.certFolder} /usr/local/sbin/selfcertgen; chmod 600 ${globals.certFolder}/*
       user: root
@@ -151,7 +116,6 @@ actions:
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
             grep -q '^[[:space:]]*\[mysqld\]' ${globals.dbConfigFile} || echo '[mysqld]' >> ${globals.dbConfigFile}
-            grep -q '^[[:space:]]*require_secure_transport=ON' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\require_secure_transport=ON' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl-cipher' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl-cipher=ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-SHA' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl_key' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_key=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.key' ${globals.dbConfigFile}
             grep -q '^[[:space:]]*ssl_cert' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\ssl_cert=\/var\/lib\/jelastic\/keys\/SSL-TLS\/server\/server.crt' ${globals.dbConfigFile}
@@ -223,7 +187,6 @@ actions:
                 rm -rf ${globals.certFolder}/${i}
             fi
         done
-        rm -rf ${globals.certFolder}
       user: root
 
   addCertsForNewNodes:
