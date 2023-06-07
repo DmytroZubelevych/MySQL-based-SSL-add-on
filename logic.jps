@@ -45,7 +45,7 @@ onInstall:
     user: root
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${globals.masterId}
-  - if (!${targetNodes.nodeGroup.length:1}):
+  - if (nodes.${targetNodes.nodeGroup}.length > 1):
       - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.crt
       - setGlobals:
           rootCaCert: ${response.out}
