@@ -45,23 +45,24 @@ onInstall:
     user: root
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${globals.masterId}
-  - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.crt
-  - setGlobals:
-      rootCaCert: ${response.out}
-  - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.key
-  - setGlobals:
-      rootCaKey: ${response.out}
-  - cmd[${targetNodes.nodeGroup}]: |-
-      copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
-    user: root
-  - cmd[${targetNodes.nodeGroup}]: |-
-      copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
-    user: root
-  - cmd[${targetNodes.nodeGroup}]: |-
-      chown 700:700 ${globals.certFolder}/*
-    user: root
-  - turnOnSSLForNodes:
-      nodesToEnableSSL: ${targetNodes.nodeGroup}
+  - if (!${targetNodes.nodeGroup.length:1}):
+      - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.crt
+      - setGlobals:
+          rootCaCert: ${response.out}
+      - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.key
+      - setGlobals:
+          rootCaKey: ${response.out}
+      - cmd[${targetNodes.nodeGroup}]: |-
+          copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
+        user: root
+      - cmd[${targetNodes.nodeGroup}]: |-
+          copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
+        user: root
+      - cmd[${targetNodes.nodeGroup}]: |-
+          chown 700:700 ${globals.certFolder}/*
+        user: root
+      - turnOnSSLForNodes:
+          nodesToEnableSSL: ${targetNodes.nodeGroup}
 
 onUninstall:
   - disableSSL
