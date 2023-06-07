@@ -32,7 +32,7 @@ CERT_DIR="/var/lib/jelastic/keys/SSL-TLS";
 
 if [ ! -f ${CERT_DIR}/root.crt ]; then
     RANDFILE=/tmp/.random openssl genrsa ${KEY_SIZE} > ${CERT_DIR}/root.key
-    RANDFILE=/tmp/.random openssl req -new -x509 -nodes -days 3650 -key ${CERT_DIR}/root.key -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${TARGET_LAYER}-${ENV_NAME}" > ${CERT_DIR}/root.crt
+    RANDFILE=/tmp/.random openssl req -new -x509 -nodes -days 3650 -key ${CERT_DIR}/root.key -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=${TARGET_LAYER}.${ENV_NAME}" > ${CERT_DIR}/root.crt
 fi
 
 if [ ! -f ${CERT_DIR}/server.crt ]; then
