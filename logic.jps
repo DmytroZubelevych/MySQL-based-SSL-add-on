@@ -45,17 +45,17 @@ onInstall:
     user: root
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${globals.masterId}
-  - cmd[${globals.masterId}]: copyCert getCert /var/lib/jelastic/keys/SSL-TLS/server/root.crt
+  - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.crt
   - setGlobals:
       rootCaCert: ${response.out}
-  - cmd[${globals.masterId}]: copyCert getCert /var/lib/jelastic/keys/SSL-TLS/server/root.key
+  - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.key
   - setGlobals:
       rootCaKey: ${response.out}
   - cmd[${targetNodes.nodeGroup}]: |-
-      copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.key '${globals.rootCaKey}'
+      copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
     user: root
   - cmd[${targetNodes.nodeGroup}]: |-
-      copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.crt '${globals.rootCaCert}'
+      copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
     user: root
   - cmd[${targetNodes.nodeGroup}]: |-
       chown 700:700 /var/lib/jelastic/keys/SSL-TLS/server/*
