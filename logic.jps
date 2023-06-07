@@ -58,7 +58,7 @@ onInstall:
       copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
     user: root
   - cmd[${targetNodes.nodeGroup}]: |-
-      chown 700:700 /var/lib/jelastic/keys/SSL-TLS/server/*
+      chown 700:700 ${globals.certFolder}/*
     user: root
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${targetNodes.nodeGroup}
