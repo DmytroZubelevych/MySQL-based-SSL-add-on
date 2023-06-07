@@ -47,8 +47,8 @@ onInstall:
   - setGlobals:
       rootCaKey: ${response.out}
   - cmd[${targetNodes.nodeGroup}]: |-
-      copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.key ${globals.rootCaKey}
-      copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.crt ${globals.rootCaCert}
+      copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.key '${globals.rootCaKey}'
+      copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.crt '${globals.rootCaCert}'
       chown 700:700 /var/lib/jelastic/keys/SSL-TLS/server/*
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${targetNodes.nodeGroup}
