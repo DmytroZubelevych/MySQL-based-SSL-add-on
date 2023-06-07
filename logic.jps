@@ -39,6 +39,18 @@ onInstall:
   - env.control.AddContainerEnvVars[${targetNodes.nodeGroup}]:
       vars: {"KEY_PASS":"${fn.password}"}
   - turnOnSSLForNodes:
+      nodesToEnableSSL: ${globals.masterId}
+  - cmd[${globals.masterId}]: copyCert getCert /var/lib/jelastic/keys/SSL-TLS/server/root.crt
+  - setGlobals:
+      rootCaCert: ${response.out}
+  - cmd[${globals.masterId}]: copyCert getCert /var/lib/jelastic/keys/SSL-TLS/server/root.key
+  - setGlobals:
+      rootCaKey: ${response.out}
+  - cmd[${targetNodes.nodeGroup}]: |-
+      copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.key ${globals.rootCaKey}
+      copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.crt ${globals.rootCaCert}
+      chown 700:700 /var/lib/jelastic/keys/SSL-TLS/server/*
+  - turnOnSSLForNodes:
       nodesToEnableSSL: ${targetNodes.nodeGroup}
 
 onUninstall:
