@@ -38,6 +38,10 @@ onInstall:
   - getMasterId
   - env.control.AddContainerEnvVars[${targetNodes.nodeGroup}]:
       vars: {"KEY_PASS":"${fn.password}"}
+  - cmd[${targetNodes.nodeGroup}]: |-
+      wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
+      chmod +x /usr/local/sbin/selfcertgen /usr/local/sbin/copyCert
+    user: root
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${globals.masterId}
   - cmd[${globals.masterId}]: copyCert getCert /var/lib/jelastic/keys/SSL-TLS/server/root.crt
@@ -50,6 +54,7 @@ onInstall:
       copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.key '${globals.rootCaKey}'
       copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.crt '${globals.rootCaCert}'
       chown 700:700 /var/lib/jelastic/keys/SSL-TLS/server/*
+    user: root
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${targetNodes.nodeGroup}
 
