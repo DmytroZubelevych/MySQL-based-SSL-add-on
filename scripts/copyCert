@@ -8,7 +8,6 @@ getCert(){
 
 uploadCert(){
     echo -e "${2}" | openssl enc -base64 -d -aes-256-cbc -salt -pass pass:${KEY_PASS} > ${1} && echo OK
-    chown -R 700:700 ${KEY}
 }
 
 case ${1} in
