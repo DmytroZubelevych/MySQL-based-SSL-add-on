@@ -40,7 +40,7 @@ onInstall:
       vars: {"KEY_PASS":"${fn.password}"}
   - cmd[${targetNodes.nodeGroup}]: |-
       wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
-      chmod +x /usr/local/sbin/selfcertgen /usr/local/sbin/copyCert
+      chmod +x /usr/local/sbin/copyCert
     user: root
   - turnOnSSLForNodes:
       nodesToEnableSSL: ${globals.masterId}
@@ -51,6 +51,7 @@ onInstall:
   - setGlobals:
       rootCaKey: ${response.out}
   - cmd[${targetNodes.nodeGroup}]: |-
+      mkdir -p /var/lib/jelastic/keys/SSL-TLS/server/
       copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.key '${globals.rootCaKey}'
       copyCert uploadCert /var/lib/jelastic/keys/SSL-TLS/server/root.crt '${globals.rootCaCert}'
       chown 700:700 /var/lib/jelastic/keys/SSL-TLS/server/*
