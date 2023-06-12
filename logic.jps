@@ -45,6 +45,11 @@ onAfterRedeployContainer[${targetNodes.nodeGroup}]:
          nodesToEnableSSL: ${targetNodes.nodeGroup}
       
 onAfterServiceScaleOut[${targetNodes.nodeGroup}]:
+  - cmd[${targetNodes.nodeGroup}]: |-
+      mkdir -p /var/lib/jelastic/keys/SSL-TLS/server/
+      wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
+      chmod +x /usr/local/sbin/copyCert
+    user: root
   - cmd[${event.response.nodes.join(id,)}]: |-
       copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
     user: root
