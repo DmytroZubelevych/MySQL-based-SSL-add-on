@@ -1,6 +1,6 @@
 type: update
 jpsVersion: 6.1.1
-logo: /images/mysql-based-ssl-logo.svg
+logo: /images/mysql-based-ssl-addon.svg
 name: SSL/TLS Encrypted Connection
 id: mysql-based-ssl-logic
 targetEditions: any
