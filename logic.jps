@@ -34,35 +34,7 @@ globals:
   certFolder: /var/lib/jelastic/keys/SSL-TLS
 
 onInstall:
-  - checkApplication
-  - getMasterId
-  - env.control.AddContainerEnvVars[${targetNodes.nodeGroup}]:
-      vars: {"KEY_PASS":"${fn.password}"}
-  - cmd[${targetNodes.nodeGroup}]: |-
-      mkdir -p /var/lib/jelastic/keys/SSL-TLS/server/
-      wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
-      chmod +x /usr/local/sbin/copyCert
-    user: root
-  - turnOnSSLForNodes:
-      nodesToEnableSSL: ${globals.masterId}
-  - if (nodes.${targetNodes.nodeGroup}.length > 1):
-      - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.crt
-      - setGlobals:
-          rootCaCert: ${response.out}
-      - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.key
-      - setGlobals:
-          rootCaKey: ${response.out}
-      - cmd[${targetNodes.nodeGroup}]: |-
-          copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
-        user: root
-      - cmd[${targetNodes.nodeGroup}]: |-
-          copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
-        user: root
-      - cmd[${targetNodes.nodeGroup}]: |-
-          chown 700:700 ${globals.certFolder}/*
-        user: root
-      - turnOnSSLForNodes:
-          nodesToEnableSSL: ${targetNodes.nodeGroup}
+  - installCertsOnEnv
 
 onUninstall:
   - disableSSL
@@ -101,10 +73,40 @@ buttons:
     successText: Certificates reissued successfully
 
 actions:
+  installCertsOnEnv:
+    - checkApplication
+    - getMasterId
+    - env.control.AddContainerEnvVars[${targetNodes.nodeGroup}]:
+        vars: {"KEY_PASS":"${fn.password}"}
+    - cmd[${targetNodes.nodeGroup}]: |-
+        mkdir -p /var/lib/jelastic/keys/SSL-TLS/server/
+        wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
+        chmod +x /usr/local/sbin/copyCert
+      user: root
+    - turnOnSSLForNodes:
+        nodesToEnableSSL: ${globals.masterId}
+    - if (nodes.${targetNodes.nodeGroup}.length > 1):
+        - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.crt
+        - setGlobals:
+            rootCaCert: ${response.out}
+        - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.key
+        - setGlobals:
+            rootCaKey: ${response.out}
+        - cmd[${targetNodes.nodeGroup}]: |-
+            copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
+          user: root
+        - cmd[${targetNodes.nodeGroup}]: |-
+            copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
+          user: root
+        - cmd[${targetNodes.nodeGroup}]: |-
+            chown 700:700 ${globals.certFolder}/*
+          user: root
+        - turnOnSSLForNodes:
+            nodesToEnableSSL: ${targetNodes.nodeGroup}
+
   reGenerateCerts:
     - cmd[${targetNodes.nodeGroup}]: rm -rf ${globals.certFolder}/*;
-    - generateCerts:
-        affectedNodes: ${targetNodes.nodeGroup}
+    - installCertsOnEnv
     - fixCertOwnPerm
     - if ('${targetNodes.nodeGroup}'.indexOf('proxysql') == -1):
         - restartNodes:
