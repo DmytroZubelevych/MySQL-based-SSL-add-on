@@ -177,7 +177,13 @@ actions:
             ln -sfT ${globals.certFolder}/server/root.crt ${globals.proxysqlDir}/proxysql-ca.pem; 
             ln -sfT ${globals.certFolder}/server/server.key ${globals.proxysqlDir}/proxysql-key.pem; 
             ln -sfT ${globals.certFolder}/server/server.crt ${globals.proxysqlDir}/proxysql-cert.pem;
-            sudo service proxysql status || jem service restart
+            service proxysql status || jem service restart
+            retries=60
+            while [ $retries -gt 0 ]; do
+                [ -n "$(netstat -nlpt 2>/dev/null | grep proxysql)" ] && break
+                sleep 1
+                let retries=${retries}-1
+            done
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "UPDATE global_variables SET variable_value='true' WHERE variable_name='mysql-have_ssl';"
             mysql -uadmin -padmin -h 127.0.0.1 -P 6032 -e "LOAD MYSQL VARIABLES TO RUNTIME; SAVE MYSQL VARIABLES TO DISK;"
         fi
