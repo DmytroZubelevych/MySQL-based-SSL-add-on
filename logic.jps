@@ -111,13 +111,8 @@ actions:
             nodesToEnableSSL: ${targetNodes.nodeGroup}
 
   reGenerateCerts:
-    - cmd[${targetNodes.nodeGroup}]: rm -rf ${globals.certFolder}/*;
+    - disableSSL
     - installCertsOnEnv
-    - fixCertOwnPerm
-    - if ('${targetNodes.nodeGroup}'.indexOf('proxysql') == -1):
-        - restartNodes:
-            nodeGroup: ${targetNodes.nodeGroup}
-            isSequential: true
             
   getMasterId:
     - forEach(nodes.${targetNodes.nodeGroup}):
