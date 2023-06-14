@@ -110,6 +110,12 @@ actions:
         - turnOnSSLForNodes:
             nodesToEnableSSL: ${targetNodes.nodeGroup}
 
+  uploadCertsAndKeys:
+    - cmd[${this.newNodes}]: |-
+        copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
+        copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
+      user: root
+
   reGenerateCerts:
     - cmd[${targetNodes.nodeGroup}]: |-
         source /etc/jelastic/metainf.conf
