@@ -167,6 +167,12 @@ actions:
     - cmd[${this.affectedNodes}]: |-
         echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
         source /etc/jelastic/metainf.conf
+        if [ "x$COMPUTE_TYPE" == "xmariadb" ] ; then
+            if [ -f "/etc/mysql/conf.d/galera.cnf" ]; then
+                grep -q '^[[:space:]]*\[sst\]' /etc/mysql/conf.d/galera.cnf || echo '[ssl]' >> /etc/mysql/conf.d/galera.cnf
+                grep -q '^[[:space:]]*ssl-mode=DISABLED' /etc/mysql/conf.d/galera.cnf || sed -ci -e '/\[sst\]/ a\ssl-mode=DISABLED' /etc/mysql/conf.d/galera.cnf
+            fi
+        fi
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
             grep -q '^[[:space:]]*\[mysqld\]' ${globals.dbConfigFile} || echo '[mysqld]' >> ${globals.dbConfigFile}
             grep -q '^[[:space:]]*#require_secure_transport=ON' ${globals.dbConfigFile} || sed -ci -e '/\[mysqld\]/ a\#require_secure_transport=ON' ${globals.dbConfigFile}
