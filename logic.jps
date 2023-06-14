@@ -51,12 +51,8 @@ onAfterServiceScaleOut[${targetNodes.nodeGroup}]:
       wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
       chmod +x /usr/local/sbin/copyCert
     user: root
-  - cmd[${event.response.nodes.join(id,)}]: |-
-      copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
-    user: root
-  - cmd[${event.response.nodes.join(id,)}]: |-
-      copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
-    user: root
+  - uploadCertsAndKeys:
+      newNodes: ${event.response.nodes.join(id,)}
   - addCertsForNewNodes
   - fixCertOwnPerm
   - enableSSL:
@@ -98,12 +94,8 @@ actions:
         - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.key
         - setGlobals:
             rootCaKey: ${response.out}
-        - cmd[${targetNodes.nodeGroup}]: |-
-            copyCert uploadCert ${globals.certFolder}/root.key '${globals.rootCaKey}'
-          user: root
-        - cmd[${targetNodes.nodeGroup}]: |-
-            copyCert uploadCert ${globals.certFolder}/root.crt '${globals.rootCaCert}'
-          user: root
+        - uploadCertsAndKeys:
+            newNodes: ${targetNodes.nodeGroup}
         - cmd[${targetNodes.nodeGroup}]: |-
             chown 700:700 ${globals.certFolder}/*
           user: root
