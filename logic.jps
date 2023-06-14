@@ -30,6 +30,7 @@ targetNodes:
     - proxysql
     
 globals:
+  galeraConfigFile: /etc/mysql/conf.d/galera.cnf
   dbConfigFile: /etc/mysql/conf.d/ssl-config.cnf
   proxysqlDir: /var/lib/proxysql
   certFolder: /var/lib/jelastic/keys/SSL-TLS
@@ -168,9 +169,9 @@ actions:
         echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" == "xmariadb" ] ; then
-            if [ -f "/etc/mysql/conf.d/galera.cnf" ]; then
-                grep -q '^[[:space:]]*\[sst\]' /etc/mysql/conf.d/galera.cnf || echo '[sst]' >> /etc/mysql/conf.d/galera.cnf
-                grep -q '^[[:space:]]*ssl-mode=DISABLED' /etc/mysql/conf.d/galera.cnf || sed -ci -e '/\[sst\]/ a\ssl-mode=DISABLED' /etc/mysql/conf.d/galera.cnf
+            if [ -f "${globals.galeraConfigFile}" ]; then
+                grep -q '^[[:space:]]*\[sst\]' ${globals.galeraConfigFile} || echo '[sst]' >> ${globals.galeraConfigFile}
+                grep -q '^[[:space:]]*ssl-mode=DISABLED' ${globals.galeraConfigFile} || sed -ci -e '/\[sst\]/ a\ssl-mode=DISABLED' ${globals.galeraConfigFile}
             fi
         fi
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
