@@ -169,7 +169,7 @@ actions:
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" == "xmariadb" ] ; then
             if [ -f "/etc/mysql/conf.d/galera.cnf" ]; then
-                grep -q '^[[:space:]]*\[sst\]' /etc/mysql/conf.d/galera.cnf || echo '[ssl]' >> /etc/mysql/conf.d/galera.cnf
+                grep -q '^[[:space:]]*\[sst\]' /etc/mysql/conf.d/galera.cnf || echo '[sst]' >> /etc/mysql/conf.d/galera.cnf
                 grep -q '^[[:space:]]*ssl-mode=DISABLED' /etc/mysql/conf.d/galera.cnf || sed -ci -e '/\[sst\]/ a\ssl-mode=DISABLED' /etc/mysql/conf.d/galera.cnf
             fi
         fi
