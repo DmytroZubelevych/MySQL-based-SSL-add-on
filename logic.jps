@@ -53,6 +53,13 @@ onAfterServiceScaleOut[${targetNodes.nodeGroup}]:
       wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
       chmod +x /usr/local/sbin/copyCert
     user: root
+  - getMasterId
+  - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.crt
+  - setGlobals:
+      rootCaCert: ${response.out}
+  - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.key
+  - setGlobals:
+      rootCaKey: ${response.out}
   - uploadCertsAndKeys:
       newNodes: ${event.response.nodes.join(id,)}
   - addCertsForNewNodes
