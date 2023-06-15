@@ -34,6 +34,7 @@ globals:
   dbConfigFile: /etc/mysql/conf.d/ssl-config.cnf
   proxysqlDir: /var/lib/proxysql
   certFolder: /var/lib/jelastic/keys/SSL-TLS
+  keyPass: ${fn.password}
 
 onInstall:
   - installCertsOnEnv
@@ -80,7 +81,7 @@ actions:
     - checkApplication
     - getMasterId
     - env.control.AddContainerEnvVars[${targetNodes.nodeGroup}]:
-        vars: {"KEY_PASS":"${fn.password}"}
+        vars: {"KEY_PASS":"${globals.keyPass}"}
     - cmd[${targetNodes.nodeGroup}]: |-
         mkdir -p /var/lib/jelastic/keys/SSL-TLS/server/
         wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
