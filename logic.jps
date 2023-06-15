@@ -52,6 +52,14 @@ onAfterServiceScaleOut[${targetNodes.nodeGroup}]:
       mkdir -p /var/lib/jelastic/keys/SSL-TLS/server/
       wget -O /usr/local/sbin/copyCert ${baseUrl}/scripts/copyCert?_r=${fn.random};
       chmod +x /usr/local/sbin/copyCert
+      grep -q  "${globals.certFolder}" /etc/jelastic/redeploy.conf || echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
+      source /etc/jelastic/metainf.conf
+      if [ "x$COMPUTE_TYPE" == "xmariadb" ] ; then
+          if [ -f "${globals.galeraConfigFile}" ]; then
+              grep -q '^[[:space:]]*\[sst\]' ${globals.galeraConfigFile} || echo '[sst]' >> ${globals.galeraConfigFile}
+              grep -q '^[[:space:]]*ssl-mode=DISABLED' ${globals.galeraConfigFile} || sed -ci -e '/\[sst\]/ a\ssl-mode=DISABLED' ${globals.galeraConfigFile}
+          fi
+      fi
     user: root
   - getMasterId
   - cmd[${globals.masterId}]: copyCert getCert ${globals.certFolder}/server/root.crt
