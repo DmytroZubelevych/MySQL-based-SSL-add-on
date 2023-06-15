@@ -55,9 +55,9 @@ onAfterServiceScaleOut[${targetNodes.nodeGroup}]:
       grep -q  "${globals.certFolder}" /etc/jelastic/redeploy.conf || echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
       source /etc/jelastic/metainf.conf
       if [ "x$COMPUTE_TYPE" == "xmariadb" ] ; then
-          if [ -f "${globals.galeraConfigFile}" ]; then
-              grep -q '^[[:space:]]*\[sst\]' ${globals.galeraConfigFile} || echo '[sst]' >> ${globals.galeraConfigFile}
-              grep -q '^[[:space:]]*ssl-mode=DISABLED' ${globals.galeraConfigFile} || sed -ci -e '/\[sst\]/ a\ssl-mode=DISABLED' ${globals.galeraConfigFile}
+          if [ -f "${globals.dbConfigFile}" ]; then
+              grep -q '^[[:space:]]*\[sst\]' ${globals.dbConfigFile} || echo '[sst]' >> ${globals.dbConfigFile}
+              grep -q '^[[:space:]]*ssl-mode=DISABLED' ${globals.dbConfigFile} || sed -ci -e '/\[sst\]/ a\ssl-mode=DISABLED' ${globals.dbConfigFile}
           fi
       fi
     user: root
@@ -185,9 +185,9 @@ actions:
         echo "${globals.certFolder}" >> /etc/jelastic/redeploy.conf
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" == "xmariadb" ] ; then
-            if [ -f "${globals.galeraConfigFile}" ]; then
-                grep -q '^[[:space:]]*\[sst\]' ${globals.galeraConfigFile} || echo '[sst]' >> ${globals.galeraConfigFile}
-                grep -q '^[[:space:]]*ssl-mode=DISABLED' ${globals.galeraConfigFile} || sed -ci -e '/\[sst\]/ a\ssl-mode=DISABLED' ${globals.galeraConfigFile}
+            if [ -f "${globals.dbConfigFile}" ]; then
+                grep -q '^[[:space:]]*\[sst\]' ${globals.dbConfigFile} || echo '[sst]' >> ${globals.dbConfigFile}
+                grep -q '^[[:space:]]*ssl-mode=DISABLED' ${globals.dbConfigFile} || sed -ci -e '/\[sst\]/ a\ssl-mode=DISABLED' ${globals.dbConfigFile}
             fi
         fi
         if [ "x$COMPUTE_TYPE" != "xproxysql" ] ; then
