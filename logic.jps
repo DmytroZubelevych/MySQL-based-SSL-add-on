@@ -126,13 +126,14 @@ actions:
       user: root
 
   reGenerateCerts:
+    - forEach(nodes.${targetNodes.nodeGroup}):
+      - cmd[${@i.id}]: jem service stop 
     - cmd[${targetNodes.nodeGroup}]: |-
         source /etc/jelastic/metainf.conf
         if [ "x$COMPUTE_TYPE" == "xproxysql" ] ; then
             rm -f ${globals.proxysqlDir}/proxysql-ca.pem; 
             rm -f ${globals.proxysqlDir}/proxysql-key.pem; 
             rm -f ${globals.proxysqlDir}/proxysql-cert.pem;
-            jem service stop
         fi
         rm -rf ${globals.certFolder}/*;
       user: root
