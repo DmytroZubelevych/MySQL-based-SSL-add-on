@@ -243,7 +243,6 @@ actions:
             sed -ci -e '/^[[:space:]]*ssl_ca/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl_cert/d' ${globals.dbConfigFile}
             sed -ci -e '/^[[:space:]]*ssl_key/d' ${globals.dbConfigFile}
-            jem service restart
         else
             service proxysql status || jem service restart
             retries=60
@@ -262,10 +261,9 @@ actions:
             done
         fi
       user: root
-    - if ('${targetNodes.nodeGroup}'.indexOf('proxysql') == -1):
-        - restartNodes:
-            nodeGroup: ${targetNodes.nodeGroup}
-            isSequential: true
+    - restartNodes:
+        nodeGroup: ${targetNodes.nodeGroup}
+        isSequential: true
     - cmd[${targetNodes.nodeGroup}]: |-  
         for i in client.crt client.key root.crt
         do
