@@ -48,7 +48,7 @@ else
 fi
 
 if [ ! -f ${CERT_DIR}/${CLIENT_CERT_NAME}.crt ]; then
-    RANDFILE=/tmp/.random openssl req -newkey rsa:2048 -days 3650 -nodes -keyout ${CERT_DIR}/client.key -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=$MYSQL_USER" > ${CERT_DIR}/client-req.pem
+    RANDFILE=/tmp/.random openssl req -newkey rsa:2048 -days 3650 -nodes -keyout ${CERT_DIR}/${CLIENT_CERT_NAME}.key -subj "/C=$KEY_COUNTRY/ST=$KEY_PROVINCE/L=$KEY_CITY/O=$KEY_ORG/CN=$MYSQL_USER" > ${CERT_DIR}/client-req.pem
     RANDFILE=/tmp/.random openssl x509 -req -in ${CERT_DIR}/client-req.pem -days 3650 -CA ${CERT_DIR}/root.crt -CAkey ${CERT_DIR}/root.key -set_serial 01 > ${CERT_DIR}/${CLIENT_CERT_NAME}.crt
 fi
 
